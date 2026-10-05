@@ -8,9 +8,10 @@ int posY = 90;
 
 const int threshold = 50;
 
+unsigned long lastSend = 0;
+
 void setup() {
 
-  // Servo pins
   servoX.attach(9);
   servoY.attach(10);
 
@@ -30,25 +31,23 @@ void loop() {
   int diffX = ldr1 - ldr2;
   int diffY = ldr3 - ldr4;
 
-  // -------- Horizontal / Azimuth --------
+  // Horizontal / Azimuth
   if (abs(diffX) > threshold) {
-
     if (diffX > 0)
       posX++;
     else
       posX--;
   }
 
-  // -------- Vertical / Elevation --------
+  // Vertical / Elevation
   if (abs(diffY) > threshold) {
-
     if (diffY > 0)
       posY++;
     else
       posY--;
   }
 
-  // Keep servo angle between 0 and 180
+  // Limit servo angles
   posX = constrain(posX, 0, 180);
   posY = constrain(posY, 0, 180);
 
@@ -56,14 +55,22 @@ void loop() {
   servoX.write(posX);
   servoY.write(posY);
 
-  // -------- Send LDR data to ESP8266 through UART --------
-  Serial.print(ldr1);
-  Serial.print(" ");
-  Serial.print(ldr2);
-  Serial.print(" ");
-  Serial.print(ldr3);
-  Serial.print(" ");
-  Serial.println(ldr4);
+  // Send LDR data every 15 seconds
+  if (millis() - lastSend >= 15000) {
+
+    lastSend = millis();
+
+    Serial.print(ldr1);
+    Serial.print(" ");
+
+    Serial.print(ldr2);
+    Serial.print(" ");
+
+    Serial.print(ldr3);
+    Serial.print(" ");
+
+    Serial.println(ldr4);
+  }
 
   delay(100);
 }
